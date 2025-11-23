@@ -69,25 +69,47 @@ export default function CertificateGenerator() {
     }
   }, [showPreview, name]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // 1. Draw the image onto the hidden canvas
     drawCertificate(canvas, name.trim());
 
-    // Wait for image to be drawn, then download
+    // 2. Wait a moment to ensure drawing is complete
     setTimeout(() => {
-      canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `thiep_${name.replace(/\s+/g, '_')}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      });
-    }, 500);
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+
+        const fileName = `thiep_${name.replace(/\s+/g, '_')}.png`;
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        // CHECK: If the device supports native sharing (iPhone/Android)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'Thiệp Mời Đám Cưới',
+              text: `Gửi ${name} thiệp mời đám cưới!`,
+            });
+            // Success! The user sees the native sheet.
+          } catch (error) {
+            // If user cancels the share sheet, do nothing.
+            console.log('Sharing cancelled', error);
+          }
+        } else {
+          // FALLBACK: For Desktop computers (Mac/Windows)
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+      }, 'image/png');
+    }, 100);
   };
 
   const handleReset = () => {
