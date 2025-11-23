@@ -14,7 +14,7 @@ export default function CertificateGenerator() {
     const img = new Image();
     img.onload = () => setImageLoaded(true);
     img.onerror = () => setImageError(true);
-    img.src = '/thiep.png';
+    img.src = process.env.PUBLIC_URL + '/thiep.png';
   }, []);
 
   const drawCertificate = (canvas, userName) => {
@@ -44,7 +44,7 @@ export default function CertificateGenerator() {
       ctx.fillText(userName, x, y);
     };
     
-    img.src = '/thiep.png';
+    img.src = process.env.PUBLIC_URL + '/thiep.png';
   };
 
   const handleSubmit = () => {
