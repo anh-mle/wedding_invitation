@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Download, FileText } from 'lucide-react';
 
 export default function CertificateGenerator() {
+  const [location, setLocation] = useState('');
   const [name, setName] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -20,7 +21,7 @@ export default function CertificateGenerator() {
   const drawCertificate = (canvas, userName) => {
     const ctx = canvas.getContext('2d');
     const img = new Image();
-    
+
     img.onload = () => {
       // Set canvas size to match image
       canvas.width = img.width;
@@ -43,40 +44,79 @@ export default function CertificateGenerator() {
       // Draw the name
       ctx.fillText(userName, x, y);
     };
-    
+
     img.src = process.env.PUBLIC_URL + '/thiep.png';
   };
 
+  const drawDongNaiCertificate = (canvas, userName) => {
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    img.onload = () => {
+      // Set canvas size to match image
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      // Draw the certificate template
+      ctx.drawImage(img, 0, 0);
+
+      // Calculate position - centered on the image
+      const fontSize = 50;
+      const y = img.height *0.335;
+
+      // Configure text style
+      ctx.font = `italic ${fontSize}px Pinyon Script`;
+      ctx.fillStyle = '#69622c';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Draw the name centered
+      ctx.fillText(userName, img.width / 2, y);
+    };
+
+    img.src = process.env.PUBLIC_URL + '/dongnai.png';
+  };
+
   const handleSubmit = () => {
-    if (!name.trim()) return;
-    
+    if (!name.trim() || !location) return;
+
     // First show the preview screen, then draw
     setShowPreview(true);
   };
 
   // Draw certificate when preview is shown
   useEffect(() => {
-    console.log('useEffect triggered:', { showPreview, canvas: previewCanvasRef.current, name });
-    if (showPreview && previewCanvasRef.current && name.trim()) {
-      console.log('Calling drawCertificate...');
-      drawCertificate(previewCanvasRef.current, name.trim());
+    console.log('useEffect triggered:', { showPreview, location, canvas: previewCanvasRef.current, name });
+    if (showPreview && name.trim() && previewCanvasRef.current) {
+      if (location === 'hanoi') {
+        console.log('Calling drawCertificate for Hà Nội...');
+        drawCertificate(previewCanvasRef.current, name.trim());
+      } else if (location === 'dongnai') {
+        console.log('Calling drawDongNaiCertificate for Đồng Nai...');
+        drawDongNaiCertificate(previewCanvasRef.current, name.trim());
+      }
     } else {
       console.log('Conditions not met:', {
         showPreview,
+        location,
         hasCanvas: !!previewCanvasRef.current,
         hasName: !!name.trim()
       });
     }
-  }, [showPreview, name]);
+  }, [showPreview, name, location]);
 
   const handleDownload = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // 1. Draw the image onto the hidden canvas
-    drawCertificate(canvas, name.trim());
+    // Draw the appropriate certificate
+    if (location === 'hanoi') {
+      drawCertificate(canvas, name.trim());
+    } else if (location === 'dongnai') {
+      drawDongNaiCertificate(canvas, name.trim());
+    }
 
-    // 2. Wait a moment to ensure drawing is complete
+    // Wait a moment to ensure drawing is complete
     setTimeout(() => {
       canvas.toBlob(async (blob) => {
         if (!blob) return;
@@ -114,6 +154,7 @@ export default function CertificateGenerator() {
 
   const handleReset = () => {
     setName('');
+    setLocation('');
     setShowPreview(false);
   };
 
@@ -167,10 +208,38 @@ export default function CertificateGenerator() {
             👰🏻‍♀️💍🤵🏻
           </div>
           <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-            Điền Tên Khách Mời
+            Thiệp Mời Đám Cưới
           </h1>
-          
+
           <div className="space-y-4 pt-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
+                Chọn Địa Điểm
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setLocation('hanoi')}
+                  className={`py-3 px-4 rounded-lg font-semibold transition duration-200 ${
+                    location === 'hanoi'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Hà Nội
+                </button>
+                <button
+                  onClick={() => setLocation('dongnai')}
+                  className={`py-3 px-4 rounded-lg font-semibold transition duration-200 ${
+                    location === 'dongnai'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Đồng Nai
+                </button>
+              </div>
+            </div>
+
             <div>
               <input
                 id="name"
@@ -180,16 +249,16 @@ export default function CertificateGenerator() {
                 placeholder="Họ và Tên"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && name.trim()) {
+                  if (e.key === 'Enter' && name.trim() && location) {
                     handleSubmit();
                   }
                 }}
               />
             </div>
-            
+
             <button
               onClick={handleSubmit}
-              disabled={!name.trim()}
+              disabled={!name.trim() || !location}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               Xem Thiệp Mời
@@ -225,7 +294,7 @@ export default function CertificateGenerator() {
               <Download className="w-5 h-5" />
               Tải Về
             </button>
-            
+
             <button
               onClick={handleReset}
               className="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition duration-200 shadow-md hover:shadow-lg"
