@@ -74,7 +74,7 @@ export default function CertificateGenerator() {
       ctx.fillText(userName, img.width / 2, y);
     };
 
-    img.src = process.env.PUBLIC_URL + '/dongnai.png';
+    img.src = process.env.PUBLIC_URL + '/thiepdongnai.png';
   };
 
   const handleSubmit = () => {
