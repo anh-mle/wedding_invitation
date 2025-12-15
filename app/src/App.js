@@ -62,7 +62,7 @@ export default function CertificateGenerator() {
 
       // Calculate position - centered on the image
       const fontSize = 50;
-      const y = img.height *0.335;
+      const y = img.height *0.305;
 
       // Configure text style
       ctx.font = `italic ${fontSize}px Pinyon Script`;
